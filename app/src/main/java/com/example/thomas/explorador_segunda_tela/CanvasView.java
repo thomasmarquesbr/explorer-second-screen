@@ -8,8 +8,10 @@ import android.graphics.DashPathEffect;
 import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.PathEffect;
+import android.os.SystemClock;
 import android.support.annotation.Nullable;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 
@@ -106,6 +108,27 @@ public class CanvasView extends View {
                 break;
         }
         return false;
+    }
+
+    public void shootEventTouch(int motionEventType, float coordinateX, float coordinateY) {
+        // Obtain MotionEvent object
+        long downTime = SystemClock.uptimeMillis();
+        long eventTime = SystemClock.uptimeMillis() + 100;
+        float x = coordinateX;
+        float y = coordinateY;
+        // List of meta states found here:     developer.android.com/reference/android/view/KeyEvent.html#getMetaState()
+        int metaState = 0;
+        MotionEvent motionEvent = MotionEvent.obtain(
+                downTime,
+                eventTime,
+                motionEventType,
+                x,
+                y,
+                metaState
+        );
+        // Dispatch touch event to view
+//        canvasView.dispatchTouchEvent(motionEvent);
+        this.onTouchEvent(motionEvent);
     }
 
 }

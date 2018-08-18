@@ -5,22 +5,13 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".MainActivity"
-    android:orientation="vertical">
+    android:orientation="horizontal"
+    android:id="@+id/root_view">
 
     <com.example.thomas.explorador_segunda_tela.CanvasView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:id="@+id/canvas_view"
-        />
-
-    <Button
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/button_clear"
-        android:onClick="onClickButton"
-        android:theme="@style/Base.Widget.AppCompat.Button.Borderless"
-        android:text="Clear"
-        android:layout_gravity="bottom|center"
         />
 
 </FrameLayout>
