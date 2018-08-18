@@ -105,7 +105,7 @@ public class CanvasView extends View {
                 invalidate();
                 break;
         }
-        return true;
+        return false;
     }
 
 }
