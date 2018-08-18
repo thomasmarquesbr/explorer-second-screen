@@ -37,7 +37,7 @@ public class CanvasView extends View {
         // and we set a new Paint with the desired attributes
         mPaint = new Paint();
         mPaint.setAntiAlias(true);
-        mPaint.setColor(Color.BLACK);
+        mPaint.setColor(mContext.getResources().getColor(R.color.brown));
         mPaint.setStyle(Paint.Style.STROKE);
         mPaint.setStrokeJoin(Paint.Join.ROUND);
         mPaint.setStrokeWidth(20f);
@@ -111,12 +111,10 @@ public class CanvasView extends View {
     }
 
     public void shootEventTouch(int motionEventType, float coordinateX, float coordinateY) {
-        // Obtain MotionEvent object
         long downTime = SystemClock.uptimeMillis();
         long eventTime = SystemClock.uptimeMillis() + 100;
         float x = coordinateX;
         float y = coordinateY;
-        // List of meta states found here:     developer.android.com/reference/android/view/KeyEvent.html#getMetaState()
         int metaState = 0;
         MotionEvent motionEvent = MotionEvent.obtain(
                 downTime,
@@ -126,7 +124,6 @@ public class CanvasView extends View {
                 y,
                 metaState
         );
-        // Dispatch touch event to view
 //        canvasView.dispatchTouchEvent(motionEvent);
         this.onTouchEvent(motionEvent);
     }

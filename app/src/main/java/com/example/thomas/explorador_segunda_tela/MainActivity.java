@@ -1,22 +1,23 @@
 package com.example.thomas.explorador_segunda_tela;
 
+import android.app.ActionBar;
+import android.app.Dialog;
 import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.os.Build;
-import android.os.CountDownTimer;
-import android.os.SystemClock;
-import android.support.annotation.RequiresApi;
-import android.support.v4.content.ContextCompat;
-import android.support.v7.app.AlertDialog;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.util.Log;
+import android.os.CountDownTimer;
+import android.support.annotation.RequiresApi;
+import android.support.v7.app.AppCompatActivity;
+import android.util.DisplayMetrics;
+import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
-import android.widget.AbsoluteLayout;
+import android.view.Window;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.ImageView;
-import android.widget.Toast;
+import android.widget.TextView;
 
 import com.example.thomas.explorador_segunda_tela.network.MulticastGroup;
 
@@ -28,12 +29,10 @@ import java.util.ArrayList;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 
-import static android.view.Gravity.BOTTOM;
-import static android.view.Gravity.LEFT;
 import static android.view.Gravity.START;
 import static android.view.Gravity.TOP;
 
-public class MainActivity extends AppCompatActivity implements View.OnTouchListener, View.OnClickListener {
+public class MainActivity extends AppCompatActivity implements View.OnTouchListener {
 
     @BindView(R.id.root_view) protected FrameLayout root_view;
     @BindView(R.id.canvas_view) protected CanvasView canvasView;
@@ -135,7 +134,7 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
             @Override
             public void onTick(long millisUntilFinished) {
                 if (i % 50 == 0) {
-                    putImageOnView(listCoordinateX.get(i), listCoordinateY.get(i));
+                    putImageOnView(listCoordinateX.get(i), listCoordinateY.get(i), "Android custom dialog example!", "Lorem ipsum blandit est netus ultrices lacus vulputate pulvinar, arcu nulla tempus nulla quisque convallis lobortis, et cubilia dui accumsan varius sollicitudin at. tortor arcu tempor at in libero urna aliquam laoreet taciti quisque tempus, praesent ligula ante molestie auctor curabitur vehicula ultricies consectetur vivamus egestas, placerat ut massa dictum potenti semper ac magna odio conubia. libero inceptos netus justo litora fusce lectus ante, per eu placerat orci luctus gravida, quisque conubia quam eu vulputate tincidunt. per mauris nisl tristique id habitant ultricies, fames curae lacinia massa dictum ad, vitae cursus enim vel magna. Turpis aliquam massa ad porta enim fusce, aliquet eros eget commodo nam integer eu, vehicula feugiat tortor elit consectetur. diam nisl feugiat himenaeos erat conubia metus suspendisse fames consequat sodales quisque habitasse, inceptos nisl aptent proin facilisis iaculis eget aliquet nostra habitant sociosqu. aptent ut nostra morbi consectetur conubia donec duis cursus libero, habitasse curae sed tempus lectus porttitor sit facilisis, donec conubia praesent lacinia augue himenaeos pharetra malesuada. habitant himenaeos imperdiet gravida sociosqu felis lacinia eget consectetur congue, dolor nostra consequat ac mi et ante lacinia. ut lectus lobortis nisi hac iaculis interdum donec senectus, phasellus sociosqu himenaeos iaculis a tempor sollicitudin, nibh lobortis ac justo ut in non. " , R.mipmap.ic_launcher);
                 }
                 if (shouldDraw) {
                     canvasView.shootEventTouch(MotionEvent.ACTION_MOVE, listCoordinateX.get(i), listCoordinateY.get(i));
@@ -155,7 +154,7 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
         shouldDraw = false;
     }
 
-    public void putImageOnView(float x, float y) {
+    public void putImageOnView(float x, float y, final String title, final String text, final int imageResId) {
         FrameLayout.LayoutParams layoutParams = new FrameLayout.LayoutParams(120, 120);
         layoutParams.gravity = TOP | START;
         layoutParams.leftMargin = (int) x - (layoutParams.width / 2);
@@ -164,12 +163,35 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
         imageButton.setImageDrawable(getDrawable(R.drawable.magnify_red));
         imageButton.setLayoutParams(layoutParams);
         imageButton.setBackgroundColor(Color.TRANSPARENT);
-        imageButton.setOnClickListener(this);
+        imageButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                DisplayMetrics metrics = MainActivity.this.getResources().getDisplayMetrics();
+                int width = metrics.widthPixels;
+                int height = metrics.heightPixels;
+                final Dialog dialog = new Dialog(MainActivity.this);
+                dialog.getWindow().requestFeature(Window.FEATURE_NO_TITLE);
+                dialog.setContentView(R.layout.custom_dialog);
+                dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+                dialog.getWindow().setGravity(Gravity.BOTTOM);
+                dialog.getWindow().setLayout(ActionBar.LayoutParams.MATCH_PARENT, height/3);
+                TextView tvTitle = (TextView) dialog.findViewById(R.id.tv_title);
+                tvTitle.setText(title);
+                TextView tvText = (TextView) dialog.findViewById(R.id.tv_text);
+                tvText.setText(text);
+                ImageView image = (ImageView) dialog.findViewById(R.id.iv_image);
+                image.setImageResource(imageResId);
+                ImageButton ibClose = (ImageButton) dialog.findViewById(R.id.ib_close);
+                ibClose.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        dialog.dismiss();
+                    }
+                });
+                dialog.show();
+            }
+        });
         root_view.addView(imageButton);
     }
 
-    @Override
-    public void onClick(View v) {
-        Log.e(TAG, "TESTE");
-    }
 }
