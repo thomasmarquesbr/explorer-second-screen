@@ -7,9 +7,11 @@ import android.graphics.drawable.ColorDrawable;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.CountDownTimer;
+import android.os.Handler;
 import android.support.annotation.RequiresApi;
 import android.support.v7.app.AppCompatActivity;
 import android.util.DisplayMetrics;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
@@ -29,8 +31,32 @@ import java.util.ArrayList;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 
+import static android.view.Gravity.END;
 import static android.view.Gravity.START;
 import static android.view.Gravity.TOP;
+
+enum ColorLink {
+    RED("RED", R.drawable.ic_red_magnify),
+    GREEN("GREEN", R.drawable.ic_green_magnify),
+    YELLOW("YELLOW", R.drawable.ic_yellow_magnify),
+    BLUE("BLUE", R.drawable.ic_blue_magnify);
+
+    private String linkColor;
+    private int resIdDrawable;
+    ColorLink(String linkColor, int resIdDrawable) {
+        this.linkColor = linkColor;
+        this.resIdDrawable = resIdDrawable;
+    }
+
+    @Override
+    public String toString() {
+        return linkColor;
+    }
+
+    public int getResIdDrawable(){
+        return resIdDrawable;
+    }
+}
 
 public class MainActivity extends AppCompatActivity implements View.OnTouchListener {
 
@@ -45,6 +71,13 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
     private String ip_multicast = "230.192.0.10";
     private int port_multicast = 1027;
 
+    private static int HEIGHT_BASE = 2048;
+    private static int WIDTH_BASE = 1536;
+    private int heightDevice;
+    private int widthDevice;
+    private float currentCoordinateX;
+    private float currentCoordinateY;
+    private int sizeImage;
     private boolean shouldDraw = false;
 
     @RequiresApi(api = Build.VERSION_CODES.O)
@@ -53,6 +86,11 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
+        DisplayMetrics metrics = new DisplayMetrics();
+        getWindowManager().getDefaultDisplay().getMetrics(metrics);
+        heightDevice = metrics.heightPixels;
+        widthDevice = metrics.widthPixels;
+        sizeImage = (widthDevice > 1079) ? 120 : 60;
         canvasView.setOnTouchListener(this);
         startDrawing();
     }
@@ -91,8 +129,6 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
 //        canvasView.clearCanvas();
 //    }
 
-
-
     public void readFilesCoordinates() {
         BufferedReader readerX = null;
         BufferedReader readerY = null;
@@ -128,22 +164,27 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
         readFilesCoordinates();
         shouldDraw = true;
         final int size = (listCoordinateX.size() <= listCoordinateY.size()) ? listCoordinateX.size() : listCoordinateY.size();
-        canvasView.shootEventTouch(MotionEvent.ACTION_DOWN, listCoordinateX.get(0) - 1, listCoordinateY.get(0) - 1);
-        CountDownTimer timer = new CountDownTimer(size * 50, 50) {
+        currentCoordinateX = (widthDevice*listCoordinateX.get(0))/WIDTH_BASE;
+        currentCoordinateY = (heightDevice*listCoordinateY.get(0))/HEIGHT_BASE;
+        canvasView.shootEventTouch(MotionEvent.ACTION_DOWN,  currentCoordinateX - 1, currentCoordinateY - 1);
+        CountDownTimer timer = new CountDownTimer(size * 200, 200) {
             private int i = 0;
             @Override
             public void onTick(long millisUntilFinished) {
+                currentCoordinateX = (widthDevice*listCoordinateX.get(i))/WIDTH_BASE;
+                currentCoordinateY = (heightDevice*listCoordinateY.get(i))/HEIGHT_BASE;
                 if (i % 50 == 0) {
-                    putImageOnView(listCoordinateX.get(i), listCoordinateY.get(i), "Android custom dialog example!", "Lorem ipsum blandit est netus ultrices lacus vulputate pulvinar, arcu nulla tempus nulla quisque convallis lobortis, et cubilia dui accumsan varius sollicitudin at. tortor arcu tempor at in libero urna aliquam laoreet taciti quisque tempus, praesent ligula ante molestie auctor curabitur vehicula ultricies consectetur vivamus egestas, placerat ut massa dictum potenti semper ac magna odio conubia. libero inceptos netus justo litora fusce lectus ante, per eu placerat orci luctus gravida, quisque conubia quam eu vulputate tincidunt. per mauris nisl tristique id habitant ultricies, fames curae lacinia massa dictum ad, vitae cursus enim vel magna. Turpis aliquam massa ad porta enim fusce, aliquet eros eget commodo nam integer eu, vehicula feugiat tortor elit consectetur. diam nisl feugiat himenaeos erat conubia metus suspendisse fames consequat sodales quisque habitasse, inceptos nisl aptent proin facilisis iaculis eget aliquet nostra habitant sociosqu. aptent ut nostra morbi consectetur conubia donec duis cursus libero, habitasse curae sed tempus lectus porttitor sit facilisis, donec conubia praesent lacinia augue himenaeos pharetra malesuada. habitant himenaeos imperdiet gravida sociosqu felis lacinia eget consectetur congue, dolor nostra consequat ac mi et ante lacinia. ut lectus lobortis nisi hac iaculis interdum donec senectus, phasellus sociosqu himenaeos iaculis a tempor sollicitudin, nibh lobortis ac justo ut in non. " , R.mipmap.ic_launcher);
+                    putImageOnView("Android custom dialog example!", "Lorem ipsum blandit est netus ultrices lacus vulputate pulvinar, arcu nulla tempus nulla quisque convallis lobortis, et cubilia dui accumsan varius sollicitudin at. tortor arcu tempor at in libero urna aliquam laoreet taciti quisque tempus, praesent ligula ante molestie auctor curabitur vehicula ultricies consectetur vivamus egestas, placerat ut massa dictum potenti semper ac magna odio conubia. libero inceptos netus justo litora fusce lectus ante, per eu placerat orci luctus gravida, quisque conubia quam eu vulputate tincidunt. per mauris nisl tristique id habitant ultricies, fames curae lacinia massa dictum ad, vitae cursus enim vel magna. Turpis aliquam massa ad porta enim fusce, aliquet eros eget commodo nam integer eu, vehicula feugiat tortor elit consectetur. diam nisl feugiat himenaeos erat conubia metus suspendisse fames consequat sodales quisque habitasse, inceptos nisl aptent proin facilisis iaculis eget aliquet nostra habitant sociosqu. aptent ut nostra morbi consectetur conubia donec duis cursus libero, habitasse curae sed tempus lectus porttitor sit facilisis, donec conubia praesent lacinia augue himenaeos pharetra malesuada. habitant himenaeos imperdiet gravida sociosqu felis lacinia eget consectetur congue, dolor nostra consequat ac mi et ante lacinia. ut lectus lobortis nisi hac iaculis interdum donec senectus, phasellus sociosqu himenaeos iaculis a tempor sollicitudin, nibh lobortis ac justo ut in non. " , R.mipmap.ic_launcher);
                 }
                 if (shouldDraw) {
-                    canvasView.shootEventTouch(MotionEvent.ACTION_MOVE, listCoordinateX.get(i), listCoordinateY.get(i));
+                    moveHat();
+                    canvasView.shootEventTouch(MotionEvent.ACTION_MOVE, currentCoordinateX, currentCoordinateY);
                     i++;
                 }
             }
             @Override
             public void onFinish() {
-                canvasView.shootEventTouch(MotionEvent.ACTION_DOWN, listCoordinateX.get(listCoordinateX.size()-1) + 1, listCoordinateY.get(listCoordinateY.size()-1) + 1);
+                canvasView.shootEventTouch(MotionEvent.ACTION_DOWN, currentCoordinateX + 1, currentCoordinateY + 1);
                 shouldDraw = false;
             }
         };
@@ -154,13 +195,23 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
         shouldDraw = false;
     }
 
-    public void putImageOnView(float x, float y, final String title, final String text, final int imageResId) {
+    public void moveHat() {
+        ImageView image_hat = (ImageView) findViewById(R.id.image_hat);
+        image_hat.setMinimumWidth(sizeImage);
+        image_hat.setMinimumHeight(sizeImage);
+        if (image_hat.getVisibility() == View.INVISIBLE)
+            image_hat.setVisibility(View.VISIBLE);
+        image_hat.setX(currentCoordinateX - (image_hat.getWidth() / 2));
+        image_hat.setY(currentCoordinateY - (image_hat.getHeight() / 2));
+    }
+
+    public void putImageOnView(final String title, final String text, final int imageResId) {
         FrameLayout.LayoutParams layoutParams = new FrameLayout.LayoutParams(120, 120);
         layoutParams.gravity = TOP | START;
-        layoutParams.leftMargin = (int) x - (layoutParams.width / 2);
-        layoutParams.topMargin = (int) y - (layoutParams.height / 2);
+        layoutParams.leftMargin = (int) currentCoordinateX - (layoutParams.width / 2);
+        layoutParams.topMargin = (int) currentCoordinateY - (layoutParams.height / 2);
         ImageButton imageButton = new ImageButton(this);
-        imageButton.setImageDrawable(getDrawable(R.drawable.magnify_red));
+        imageButton.setImageDrawable(getDrawable(ColorLink.valueOf("RED").getResIdDrawable()));
         imageButton.setLayoutParams(layoutParams);
         imageButton.setBackgroundColor(Color.TRANSPARENT);
         imageButton.setOnClickListener(new View.OnClickListener() {
@@ -176,6 +227,7 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
                 dialog.getWindow().setGravity(Gravity.BOTTOM);
                 dialog.getWindow().setLayout(ActionBar.LayoutParams.MATCH_PARENT, height/3);
                 TextView tvTitle = (TextView) dialog.findViewById(R.id.tv_title);
+                tvTitle.setTextSize((widthDevice > 1079) ? 24 : 16);
                 tvTitle.setText(title);
                 TextView tvText = (TextView) dialog.findViewById(R.id.tv_text);
                 tvText.setText(text);
@@ -191,7 +243,23 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
                 dialog.show();
             }
         });
+        showImageInTop();
         root_view.addView(imageButton);
+
+    }
+
+    public void showImageInTop() {
+        final ImageView imageView = (ImageView) findViewById(R.id.image_view);
+        imageView.setImageDrawable(getDrawable(R.mipmap.ic_launcher));
+        imageView.setVisibility(View.VISIBLE);
+
+        Handler handler = new Handler();
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                imageView.setVisibility(View.INVISIBLE);
+            }
+        }, 5000);
     }
 
 }
