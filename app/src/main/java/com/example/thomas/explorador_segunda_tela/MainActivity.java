@@ -23,6 +23,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.example.thomas.explorador_segunda_tela.helper.PreferencesHelper;
+import com.example.thomas.explorador_segunda_tela.model.Link;
 import com.example.thomas.explorador_segunda_tela.network.MulticastGroup;
 
 import java.io.BufferedReader;
@@ -36,29 +37,6 @@ import butterknife.ButterKnife;
 import static android.view.Gravity.END;
 import static android.view.Gravity.START;
 import static android.view.Gravity.TOP;
-
-enum ColorLink {
-    RED("RED", R.drawable.ic_red_magnify),
-    GREEN("GREEN", R.drawable.ic_green_magnify),
-    YELLOW("YELLOW", R.drawable.ic_yellow_magnify),
-    BLUE("BLUE", R.drawable.ic_blue_magnify);
-
-    private String linkColor;
-    private int resIdDrawable;
-    ColorLink(String linkColor, int resIdDrawable) {
-        this.linkColor = linkColor;
-        this.resIdDrawable = resIdDrawable;
-    }
-
-    @Override
-    public String toString() {
-        return linkColor;
-    }
-
-    public int getResIdDrawable(){
-        return resIdDrawable;
-    }
-}
 
 public class MainActivity extends AppCompatActivity implements View.OnTouchListener {
 
@@ -180,7 +158,12 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
                 if (i % 50 == 0) {
                     preferencesHelper.putPointX(currentCoordinateX);
                     preferencesHelper.putPointY(currentCoordinateY);
-                    putImageOnView("Android custom dialog example!", "Lorem ipsum blandit est netus ultrices lacus vulputate pulvinar, arcu nulla tempus nulla quisque convallis lobortis, et cubilia dui accumsan varius sollicitudin at. tortor arcu tempor at in libero urna aliquam laoreet taciti quisque tempus, praesent ligula ante molestie auctor curabitur vehicula ultricies consectetur vivamus egestas, placerat ut massa dictum potenti semper ac magna odio conubia. libero inceptos netus justo litora fusce lectus ante, per eu placerat orci luctus gravida, quisque conubia quam eu vulputate tincidunt. per mauris nisl tristique id habitant ultricies, fames curae lacinia massa dictum ad, vitae cursus enim vel magna. Turpis aliquam massa ad porta enim fusce, aliquet eros eget commodo nam integer eu, vehicula feugiat tortor elit consectetur. diam nisl feugiat himenaeos erat conubia metus suspendisse fames consequat sodales quisque habitasse, inceptos nisl aptent proin facilisis iaculis eget aliquet nostra habitant sociosqu. aptent ut nostra morbi consectetur conubia donec duis cursus libero, habitasse curae sed tempus lectus porttitor sit facilisis, donec conubia praesent lacinia augue himenaeos pharetra malesuada. habitant himenaeos imperdiet gravida sociosqu felis lacinia eget consectetur congue, dolor nostra consequat ac mi et ante lacinia. ut lectus lobortis nisi hac iaculis interdum donec senectus, phasellus sociosqu himenaeos iaculis a tempor sollicitudin, nibh lobortis ac justo ut in non. " , R.mipmap.ic_launcher);
+                    int resIdImage = getResources().getIdentifier("ic_launcher", "mipmap", getPackageName());
+                    Link link = new Link("Android custom dialog example!",
+                                    "Lorem ipsum blandit est netus ultrices lacus vulputate pulvinar, arcu nulla tempus nulla quisque convallis lobortis, et cubilia dui accumsan varius sollicitudin at. tortor arcu tempor at in libero urna aliquam laoreet taciti quisque tempus, praesent ligula ante molestie auctor curabitur vehicula ultricies consectetur vivamus egestas, placerat ut massa dictum potenti semper ac magna odio conubia. libero inceptos netus justo litora fusce lectus ante, per eu placerat orci luctus gravida, quisque conubia quam eu vulputate tincidunt. per mauris nisl tristique id habitant ultricies, fames curae lacinia massa dictum ad, vitae cursus enim vel magna. Turpis aliquam massa ad porta enim fusce, aliquet eros eget commodo nam integer eu, vehicula feugiat tortor elit consectetur. diam nisl feugiat himenaeos erat conubia metus suspendisse fames consequat sodales quisque habitasse, inceptos nisl aptent proin facilisis iaculis eget aliquet nostra habitant sociosqu. aptent ut nostra morbi consectetur conubia donec duis cursus libero, habitasse curae sed tempus lectus porttitor sit facilisis, donec conubia praesent lacinia augue himenaeos pharetra malesuada. habitant himenaeos imperdiet gravida sociosqu felis lacinia eget consectetur congue, dolor nostra consequat ac mi et ante lacinia. ut lectus lobortis nisi hac iaculis interdum donec senectus, phasellus sociosqu himenaeos iaculis a tempor sollicitudin, nibh lobortis ac justo ut in non. ",
+                                        "RED",
+                                        resIdImage);
+                    putImageOnView(link);
                 }
                 if (shouldDraw) {
                     moveHat();
@@ -213,13 +196,13 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
         image_hat.setY(currentCoordinateY - (image_hat.getHeight() / 2));
     }
 
-    public void putImageOnView(final String title, final String text, final int imageResId) {
+    public void putImageOnView(final Link link) {
         FrameLayout.LayoutParams layoutParams = new FrameLayout.LayoutParams(120, 120);
         layoutParams.gravity = TOP | START;
         layoutParams.leftMargin = (int) currentCoordinateX - (layoutParams.width / 2);
         layoutParams.topMargin = (int) currentCoordinateY - (layoutParams.height / 2);
         ImageButton imageButton = new ImageButton(this);
-        imageButton.setImageDrawable(getDrawable(ColorLink.valueOf("RED").getResIdDrawable()));
+        imageButton.setImageDrawable(getDrawable(link.getResColorLink()));
         imageButton.setLayoutParams(layoutParams);
         imageButton.setBackgroundColor(Color.TRANSPARENT);
         imageButton.setOnClickListener(new View.OnClickListener() {
@@ -236,11 +219,11 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
                 dialog.getWindow().setLayout(ActionBar.LayoutParams.MATCH_PARENT, height/3);
                 TextView tvTitle = (TextView) dialog.findViewById(R.id.tv_title);
                 tvTitle.setTextSize((widthDevice > 1079) ? 24 : 16);
-                tvTitle.setText(title);
+                tvTitle.setText(link.getTitle());
                 TextView tvText = (TextView) dialog.findViewById(R.id.tv_text);
-                tvText.setText(text);
+                tvText.setText(link.getDescription());
                 ImageView image = (ImageView) dialog.findViewById(R.id.iv_image);
-                image.setImageResource(imageResId);
+                image.setImageResource(link.getResIdImage());
                 ImageButton ibClose = (ImageButton) dialog.findViewById(R.id.ib_close);
                 ibClose.setOnClickListener(new View.OnClickListener() {
                     @Override
@@ -251,14 +234,14 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
                 dialog.show();
             }
         });
-        showImageInTop();
+        showImageInTop(link.getResIdImage());
         root_view.addView(imageButton);
 
     }
 
-    public void showImageInTop() {
+    public void showImageInTop(int resImageId) {
         final ImageView imageView = (ImageView) findViewById(R.id.image_view);
-        imageView.setImageDrawable(getDrawable(R.mipmap.ic_launcher));
+        imageView.setImageDrawable(getDrawable(resImageId));
         imageView.setVisibility(View.VISIBLE);
 
         Handler handler = new Handler();
