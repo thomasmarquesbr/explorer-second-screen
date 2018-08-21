@@ -31,4 +31,6 @@ dependencies {
     annotationProcessor 'com.jakewharton:butterknife-compiler:8.8.1'
     //BottommDialog
     implementation 'org.michaelbel:bottomsheet:1.2.2'
+    //GSON
+    implementation 'com.google.code.gson:gson:2.8.5'
 }

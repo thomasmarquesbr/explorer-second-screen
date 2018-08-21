@@ -2,6 +2,7 @@ package com.example.thomas.explorador_segunda_tela;
 
 import android.app.ActionBar;
 import android.app.Dialog;
+import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Build;
@@ -21,6 +22,7 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.example.thomas.explorador_segunda_tela.helper.PreferencesHelper;
 import com.example.thomas.explorador_segunda_tela.network.MulticastGroup;
 
 import java.io.BufferedReader;
@@ -64,6 +66,7 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
     @BindView(R.id.canvas_view) protected CanvasView canvasView;
 
     private String TAG = "MainActivity";
+    private PreferencesHelper preferencesHelper;
     ArrayList<Float> listCoordinateX = new ArrayList<>();
     ArrayList<Float> listCoordinateY = new ArrayList<>();
     private MulticastGroup multicastGroup;
@@ -86,6 +89,7 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
+        preferencesHelper = new PreferencesHelper(this);
         DisplayMetrics metrics = new DisplayMetrics();
         getWindowManager().getDefaultDisplay().getMetrics(metrics);
         heightDevice = metrics.heightPixels;
@@ -167,13 +171,15 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
         currentCoordinateX = (widthDevice*listCoordinateX.get(0))/WIDTH_BASE;
         currentCoordinateY = (heightDevice*listCoordinateY.get(0))/HEIGHT_BASE;
         canvasView.shootEventTouch(MotionEvent.ACTION_DOWN,  currentCoordinateX - 1, currentCoordinateY - 1);
-        CountDownTimer timer = new CountDownTimer(size * 200, 200) {
+        CountDownTimer timer = new CountDownTimer(size * 50, 50) {
             private int i = 0;
             @Override
             public void onTick(long millisUntilFinished) {
                 currentCoordinateX = (widthDevice*listCoordinateX.get(i))/WIDTH_BASE;
                 currentCoordinateY = (heightDevice*listCoordinateY.get(i))/HEIGHT_BASE;
                 if (i % 50 == 0) {
+                    preferencesHelper.putPointX(currentCoordinateX);
+                    preferencesHelper.putPointY(currentCoordinateY);
                     putImageOnView("Android custom dialog example!", "Lorem ipsum blandit est netus ultrices lacus vulputate pulvinar, arcu nulla tempus nulla quisque convallis lobortis, et cubilia dui accumsan varius sollicitudin at. tortor arcu tempor at in libero urna aliquam laoreet taciti quisque tempus, praesent ligula ante molestie auctor curabitur vehicula ultricies consectetur vivamus egestas, placerat ut massa dictum potenti semper ac magna odio conubia. libero inceptos netus justo litora fusce lectus ante, per eu placerat orci luctus gravida, quisque conubia quam eu vulputate tincidunt. per mauris nisl tristique id habitant ultricies, fames curae lacinia massa dictum ad, vitae cursus enim vel magna. Turpis aliquam massa ad porta enim fusce, aliquet eros eget commodo nam integer eu, vehicula feugiat tortor elit consectetur. diam nisl feugiat himenaeos erat conubia metus suspendisse fames consequat sodales quisque habitasse, inceptos nisl aptent proin facilisis iaculis eget aliquet nostra habitant sociosqu. aptent ut nostra morbi consectetur conubia donec duis cursus libero, habitasse curae sed tempus lectus porttitor sit facilisis, donec conubia praesent lacinia augue himenaeos pharetra malesuada. habitant himenaeos imperdiet gravida sociosqu felis lacinia eget consectetur congue, dolor nostra consequat ac mi et ante lacinia. ut lectus lobortis nisi hac iaculis interdum donec senectus, phasellus sociosqu himenaeos iaculis a tempor sollicitudin, nibh lobortis ac justo ut in non. " , R.mipmap.ic_launcher);
                 }
                 if (shouldDraw) {
@@ -186,6 +192,8 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
             public void onFinish() {
                 canvasView.shootEventTouch(MotionEvent.ACTION_DOWN, currentCoordinateX + 1, currentCoordinateY + 1);
                 shouldDraw = false;
+//                Log.e(TAG, "x: " + preferencesHelper.getListPoints(PreferencesHelper.KEY_LIST_X));
+//                Log.e(TAG, "y: " + preferencesHelper.getListPoints(PreferencesHelper.KEY_LIST_Y));
             }
         };
         timer.start();
