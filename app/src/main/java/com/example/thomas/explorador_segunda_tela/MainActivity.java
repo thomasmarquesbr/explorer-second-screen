@@ -17,6 +17,7 @@ import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.Window;
+import android.view.WindowManager;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.ImageView;
@@ -30,6 +31,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -60,6 +62,9 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
     private float currentCoordinateY;
     private int sizeImage;
     private boolean shouldDraw = false;
+    private boolean isDrawing = false;
+    private CountDownTimer timerDrawing;
+    private List<Link> links;
 
     @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
@@ -67,6 +72,7 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
+        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
         preferencesHelper = new PreferencesHelper(this);
         DisplayMetrics metrics = new DisplayMetrics();
         getWindowManager().getDefaultDisplay().getMetrics(metrics);
@@ -74,7 +80,35 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
         widthDevice = metrics.widthPixels;
         sizeImage = (widthDevice > 1079) ? 120 : 60;
         canvasView.setOnTouchListener(this);
-        startDrawing();
+        createLinks();
+//        startDrawing();
+    }
+
+    @Override
+    public void onWindowFocusChanged(boolean hasFocus) {
+        super.onWindowFocusChanged(hasFocus);
+        if (hasFocus) {
+            hideSystemUI();
+        }
+    }
+
+    private void hideSystemUI() {
+        View decorView = getWindow().getDecorView();
+        decorView.setSystemUiVisibility(
+                View.SYSTEM_UI_FLAG_IMMERSIVE
+                        | View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                        | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                        | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                        | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                        | View.SYSTEM_UI_FLAG_FULLSCREEN);
+    }
+
+    private void showSystemUI() {
+        View decorView = getWindow().getDecorView();
+        decorView.setSystemUiVisibility(
+                View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                        | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                        | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN);
     }
 
     @Override
@@ -111,6 +145,28 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
 //        canvasView.clearCanvas();
 //    }
 
+    public void createLinks() {
+        links = new ArrayList<>();
+        preferencesHelper.clear();
+        for(int i = 0; i < 9; i++) {
+            int resIdImage = getResources().getIdentifier("ic_launcher", "mipmap", getPackageName());
+            Link link = new Link("Android custom dialog example!",
+                    "Lorem ipsum blandit est netus ultrices lacus vulputate pulvinar, arcu nulla tempus nulla quisque convallis lobortis, et cubilia dui accumsan varius sollicitudin at. tortor arcu tempor at in libero urna aliquam laoreet taciti quisque tempus, praesent ligula ante molestie auctor curabitur vehicula ultricies consectetur vivamus egestas, placerat ut massa dictum potenti semper ac magna odio conubia. libero inceptos netus justo litora fusce lectus ante, per eu placerat orci luctus gravida, quisque conubia quam eu vulputate tincidunt. per mauris nisl tristique id habitant ultricies, fames curae lacinia massa dictum ad, vitae cursus enim vel magna. Turpis aliquam massa ad porta enim fusce, aliquet eros eget commodo nam integer eu, vehicula feugiat tortor elit consectetur. diam nisl feugiat himenaeos erat conubia metus suspendisse fames consequat sodales quisque habitasse, inceptos nisl aptent proin facilisis iaculis eget aliquet nostra habitant sociosqu. aptent ut nostra morbi consectetur conubia donec duis cursus libero, habitasse curae sed tempus lectus porttitor sit facilisis, donec conubia praesent lacinia augue himenaeos pharetra malesuada. habitant himenaeos imperdiet gravida sociosqu felis lacinia eget consectetur congue, dolor nostra consequat ac mi et ante lacinia. ut lectus lobortis nisi hac iaculis interdum donec senectus, phasellus sociosqu himenaeos iaculis a tempor sollicitudin, nibh lobortis ac justo ut in non. ",
+                    resIdImage);
+            links.add(link);
+        }
+    }
+
+    public void startLink(String color, int id) {
+        if (links != null) {
+            Link link = links.get(id);
+            link.setColor(color);
+            putImageOnView(link);
+            preferencesHelper.putPointX(currentCoordinateX);
+            preferencesHelper.putPointY(currentCoordinateY);
+        }
+    }
+
     public void readFilesCoordinates() {
         BufferedReader readerX = null;
         BufferedReader readerY = null;
@@ -142,48 +198,71 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
         }
     }
 
-    public void startDrawing() {
-        readFilesCoordinates();
-        shouldDraw = true;
-        final int size = (listCoordinateX.size() <= listCoordinateY.size()) ? listCoordinateX.size() : listCoordinateY.size();
-        currentCoordinateX = (widthDevice*listCoordinateX.get(0))/WIDTH_BASE;
-        currentCoordinateY = (heightDevice*listCoordinateY.get(0))/HEIGHT_BASE;
-        canvasView.shootEventTouch(MotionEvent.ACTION_DOWN,  currentCoordinateX - 1, currentCoordinateY - 1);
-        CountDownTimer timer = new CountDownTimer(size * 50, 50) {
-            private int i = 0;
+    public void startDrawing(final int duration) {
+        runOnUiThread(new Runnable() {
             @Override
-            public void onTick(long millisUntilFinished) {
-                currentCoordinateX = (widthDevice*listCoordinateX.get(i))/WIDTH_BASE;
-                currentCoordinateY = (heightDevice*listCoordinateY.get(i))/HEIGHT_BASE;
-                if (i % 50 == 0) {
-                    preferencesHelper.putPointX(currentCoordinateX);
-                    preferencesHelper.putPointY(currentCoordinateY);
-                    int resIdImage = getResources().getIdentifier("ic_launcher", "mipmap", getPackageName());
-                    Link link = new Link("Android custom dialog example!",
-                                    "Lorem ipsum blandit est netus ultrices lacus vulputate pulvinar, arcu nulla tempus nulla quisque convallis lobortis, et cubilia dui accumsan varius sollicitudin at. tortor arcu tempor at in libero urna aliquam laoreet taciti quisque tempus, praesent ligula ante molestie auctor curabitur vehicula ultricies consectetur vivamus egestas, placerat ut massa dictum potenti semper ac magna odio conubia. libero inceptos netus justo litora fusce lectus ante, per eu placerat orci luctus gravida, quisque conubia quam eu vulputate tincidunt. per mauris nisl tristique id habitant ultricies, fames curae lacinia massa dictum ad, vitae cursus enim vel magna. Turpis aliquam massa ad porta enim fusce, aliquet eros eget commodo nam integer eu, vehicula feugiat tortor elit consectetur. diam nisl feugiat himenaeos erat conubia metus suspendisse fames consequat sodales quisque habitasse, inceptos nisl aptent proin facilisis iaculis eget aliquet nostra habitant sociosqu. aptent ut nostra morbi consectetur conubia donec duis cursus libero, habitasse curae sed tempus lectus porttitor sit facilisis, donec conubia praesent lacinia augue himenaeos pharetra malesuada. habitant himenaeos imperdiet gravida sociosqu felis lacinia eget consectetur congue, dolor nostra consequat ac mi et ante lacinia. ut lectus lobortis nisi hac iaculis interdum donec senectus, phasellus sociosqu himenaeos iaculis a tempor sollicitudin, nibh lobortis ac justo ut in non. ",
-                                        "RED",
-                                        resIdImage);
-                    putImageOnView(link);
-                }
-                if (shouldDraw) {
-                    moveHat();
-                    canvasView.shootEventTouch(MotionEvent.ACTION_MOVE, currentCoordinateX, currentCoordinateY);
-                    i++;
-                }
-            }
-            @Override
-            public void onFinish() {
-                canvasView.shootEventTouch(MotionEvent.ACTION_DOWN, currentCoordinateX + 1, currentCoordinateY + 1);
-                shouldDraw = false;
+            public void run() {
+                readFilesCoordinates();
+                isDrawing = true;
+                shouldDraw = true;
+                final int size = (listCoordinateX.size() <= listCoordinateY.size()) ? listCoordinateX.size() : listCoordinateY.size();
+                currentCoordinateX = (widthDevice*listCoordinateX.get(0))/WIDTH_BASE;
+                currentCoordinateY = (heightDevice*listCoordinateY.get(0))/HEIGHT_BASE;
+                canvasView.shootEventTouch(MotionEvent.ACTION_DOWN,  currentCoordinateX - 1, currentCoordinateY - 1);
+                timerDrawing = new CountDownTimer((size) * 1000, 500) {
+                    private int i = 0;
+                    @Override
+                    public void onTick(long millisUntilFinished) {
+                        currentCoordinateX = (widthDevice*listCoordinateX.get(i))/WIDTH_BASE;
+                        currentCoordinateY = (heightDevice*listCoordinateY.get(i))/HEIGHT_BASE;
+                        if (i % 50 == 0) {
+//                            preferencesHelper.putPointX(currentCoordinateX);
+//                            preferencesHelper.putPointY(currentCoordinateY);
+//                            int resIdImage = getResources().getIdentifier("ic_launcher", "mipmap", getPackageName());
+//                            Link link = new Link("Android custom dialog example!",
+//                                    "Lorem ipsum blandit est netus ultrices lacus vulputate pulvinar, arcu nulla tempus nulla quisque convallis lobortis, et cubilia dui accumsan varius sollicitudin at. tortor arcu tempor at in libero urna aliquam laoreet taciti quisque tempus, praesent ligula ante molestie auctor curabitur vehicula ultricies consectetur vivamus egestas, placerat ut massa dictum potenti semper ac magna odio conubia. libero inceptos netus justo litora fusce lectus ante, per eu placerat orci luctus gravida, quisque conubia quam eu vulputate tincidunt. per mauris nisl tristique id habitant ultricies, fames curae lacinia massa dictum ad, vitae cursus enim vel magna. Turpis aliquam massa ad porta enim fusce, aliquet eros eget commodo nam integer eu, vehicula feugiat tortor elit consectetur. diam nisl feugiat himenaeos erat conubia metus suspendisse fames consequat sodales quisque habitasse, inceptos nisl aptent proin facilisis iaculis eget aliquet nostra habitant sociosqu. aptent ut nostra morbi consectetur conubia donec duis cursus libero, habitasse curae sed tempus lectus porttitor sit facilisis, donec conubia praesent lacinia augue himenaeos pharetra malesuada. habitant himenaeos imperdiet gravida sociosqu felis lacinia eget consectetur congue, dolor nostra consequat ac mi et ante lacinia. ut lectus lobortis nisi hac iaculis interdum donec senectus, phasellus sociosqu himenaeos iaculis a tempor sollicitudin, nibh lobortis ac justo ut in non. ",
+//                                    "RED",
+//                                    resIdImage);
+//                            putImageOnView(link);
+                        }
+                        if (shouldDraw) {
+                            moveHat();
+                            canvasView.shootEventTouch(MotionEvent.ACTION_MOVE, currentCoordinateX, currentCoordinateY);
+                            i++;
+                        }
+                    }
+                    @Override
+                    public void onFinish() {
+                        canvasView.shootEventTouch(MotionEvent.ACTION_DOWN, currentCoordinateX + 1, currentCoordinateY + 1);
+                        shouldDraw = false;
 //                Log.e(TAG, "x: " + preferencesHelper.getListPoints(PreferencesHelper.KEY_LIST_X));
 //                Log.e(TAG, "y: " + preferencesHelper.getListPoints(PreferencesHelper.KEY_LIST_Y));
+                    }
+                };
+                timerDrawing.start();
             }
-        };
-        timer.start();
+        });
     }
 
     public void stopDraw() {
         shouldDraw = false;
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+//                FrameLayout.LayoutParams layoutParams = new FrameLayout.LayoutParams(120, 120);
+//                layoutParams.gravity = TOP | START;
+//                layoutParams.leftMargin = (int) currentCoordinateX - (layoutParams.width / 2);
+//                layoutParams.topMargin = (int) currentCoordinateY - (layoutParams.height / 2);
+                ImageView xImage = findViewById(R.id.x_image);
+                xImage.setVisibility(View.VISIBLE);
+                xImage.setImageDrawable(getDrawable(R.mipmap.x_image));
+                xImage.setX((int) currentCoordinateX - (sizeImage / 2));
+                xImage.setY((int) currentCoordinateY - (sizeImage / 2));
+//                imageButton.setLayoutParams(layoutParams);
+                ImageView image_hat = (ImageView) findViewById(R.id.image_hat);
+                image_hat.setVisibility(View.INVISIBLE);
+            }
+        });
     }
 
     public void moveHat() {
@@ -192,51 +271,55 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
         image_hat.setMinimumHeight(sizeImage);
         if (image_hat.getVisibility() == View.INVISIBLE)
             image_hat.setVisibility(View.VISIBLE);
-        image_hat.setX(currentCoordinateX - (image_hat.getWidth() / 2));
-        image_hat.setY(currentCoordinateY - (image_hat.getHeight() / 2));
+        image_hat.setX(currentCoordinateX - (image_hat.getWidth()/4));
+        image_hat.setY(currentCoordinateY - (image_hat.getHeight()/4));
     }
 
     public void putImageOnView(final Link link) {
-        FrameLayout.LayoutParams layoutParams = new FrameLayout.LayoutParams(120, 120);
-        layoutParams.gravity = TOP | START;
-        layoutParams.leftMargin = (int) currentCoordinateX - (layoutParams.width / 2);
-        layoutParams.topMargin = (int) currentCoordinateY - (layoutParams.height / 2);
-        ImageButton imageButton = new ImageButton(this);
-        imageButton.setImageDrawable(getDrawable(link.getResColorLink()));
-        imageButton.setLayoutParams(layoutParams);
-        imageButton.setBackgroundColor(Color.TRANSPARENT);
-        imageButton.setOnClickListener(new View.OnClickListener() {
+        runOnUiThread(new Runnable() {
             @Override
-            public void onClick(View v) {
-                DisplayMetrics metrics = MainActivity.this.getResources().getDisplayMetrics();
-                int width = metrics.widthPixels;
-                int height = metrics.heightPixels;
-                final Dialog dialog = new Dialog(MainActivity.this);
-                dialog.getWindow().requestFeature(Window.FEATURE_NO_TITLE);
-                dialog.setContentView(R.layout.custom_dialog);
-                dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-                dialog.getWindow().setGravity(Gravity.BOTTOM);
-                dialog.getWindow().setLayout(ActionBar.LayoutParams.MATCH_PARENT, height/3);
-                TextView tvTitle = (TextView) dialog.findViewById(R.id.tv_title);
-                tvTitle.setTextSize((widthDevice > 1079) ? 24 : 16);
-                tvTitle.setText(link.getTitle());
-                TextView tvText = (TextView) dialog.findViewById(R.id.tv_text);
-                tvText.setText(link.getDescription());
-                ImageView image = (ImageView) dialog.findViewById(R.id.iv_image);
-                image.setImageResource(link.getResIdImage());
-                ImageButton ibClose = (ImageButton) dialog.findViewById(R.id.ib_close);
-                ibClose.setOnClickListener(new View.OnClickListener() {
+            public void run() {
+                FrameLayout.LayoutParams layoutParams = new FrameLayout.LayoutParams(120, 120);
+                layoutParams.gravity = TOP | START;
+                layoutParams.leftMargin = (int) currentCoordinateX - (layoutParams.width / 2);
+                layoutParams.topMargin = (int) currentCoordinateY - (layoutParams.height / 2);
+                ImageButton imageButton = new ImageButton(MainActivity.this);
+                imageButton.setImageDrawable(getDrawable(link.getResColorLink()));
+                imageButton.setLayoutParams(layoutParams);
+                imageButton.setBackgroundColor(Color.TRANSPARENT);
+                imageButton.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        dialog.dismiss();
+                        DisplayMetrics metrics = MainActivity.this.getResources().getDisplayMetrics();
+                        int width = metrics.widthPixels;
+                        int height = metrics.heightPixels;
+                        final Dialog dialog = new Dialog(MainActivity.this);
+                        dialog.getWindow().requestFeature(Window.FEATURE_NO_TITLE);
+                        dialog.setContentView(R.layout.custom_dialog);
+                        dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+                        dialog.getWindow().setGravity(Gravity.BOTTOM);
+                        dialog.getWindow().setLayout(ActionBar.LayoutParams.MATCH_PARENT, height/3);
+                        TextView tvTitle = (TextView) dialog.findViewById(R.id.tv_title);
+                        tvTitle.setTextSize((widthDevice > 1079) ? 24 : 16);
+                        tvTitle.setText(link.getTitle());
+                        TextView tvText = (TextView) dialog.findViewById(R.id.tv_text);
+                        tvText.setText(link.getDescription());
+                        ImageView image = (ImageView) dialog.findViewById(R.id.iv_image);
+                        image.setImageResource(link.getResIdImage());
+                        ImageButton ibClose = (ImageButton) dialog.findViewById(R.id.ib_close);
+                        ibClose.setOnClickListener(new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                dialog.dismiss();
+                            }
+                        });
+                        dialog.show();
                     }
                 });
-                dialog.show();
+                showImageInTop(link.getResIdImage());
+                root_view.addView(imageButton);
             }
         });
-        showImageInTop(link.getResIdImage());
-        root_view.addView(imageButton);
-
     }
 
     public void showImageInTop(int resImageId) {

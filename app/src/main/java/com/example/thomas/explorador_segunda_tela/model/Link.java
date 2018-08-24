@@ -33,10 +33,9 @@ public class Link {
     private ColorLink colorLink;
     private int getResIdVideo;
 
-    public Link(String title, String description, String color, int resIdImage) {
+    public Link(String title, String description, int resIdImage) {
         this.title = title;
         this.description = description;
-        this.colorLink = ColorLink.valueOf(color);
         this.resIdImage = resIdImage;
     }
 
@@ -62,5 +61,9 @@ public class Link {
 
     public int getGetResIdVideo() {
         return getResIdVideo;
+    }
+
+    public void setColor(String color) {
+        this.colorLink = ColorLink.valueOf(color);
     }
 }
