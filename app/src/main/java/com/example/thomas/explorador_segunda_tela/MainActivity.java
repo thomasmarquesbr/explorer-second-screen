@@ -21,6 +21,7 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.example.thomas.explorador_segunda_tela.dao.LupasDAO;
 import com.example.thomas.explorador_segunda_tela.helper.PreferencesHelper;
 import com.example.thomas.explorador_segunda_tela.model.Lupa;
 import com.example.thomas.explorador_segunda_tela.model.Tipo;
@@ -62,6 +63,7 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
     private boolean shouldDraw = false;
     private boolean isDrawing = false;
     private CountDownTimer timerDrawing;
+
     private List<Lupa> lupas;
 
     @RequiresApi(api = Build.VERSION_CODES.O)
@@ -69,8 +71,11 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        ButterKnife.bind(this);
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
+
+        root_view = findViewById(R.id.root_view);
+        canvasView = findViewById(R.id.canvas_view);
+
         preferencesHelper = new PreferencesHelper(this);
         DisplayMetrics metrics = new DisplayMetrics();
         getWindowManager().getDefaultDisplay().getMetrics(metrics);
@@ -78,7 +83,7 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
         widthDevice = metrics.widthPixels;
         sizeImage = (widthDevice > 1079) ? 120 : 60;
         canvasView.setOnTouchListener(this);
-        createLinks();
+        lupas = (new LupasDAO(this)).getLupas();
 //        startDrawing();
     }
 
