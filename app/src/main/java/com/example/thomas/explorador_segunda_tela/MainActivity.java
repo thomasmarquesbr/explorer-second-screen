@@ -2,7 +2,6 @@ package com.example.thomas.explorador_segunda_tela;
 
 import android.app.ActionBar;
 import android.app.Dialog;
-import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Build;
@@ -12,7 +11,6 @@ import android.os.Handler;
 import android.support.annotation.RequiresApi;
 import android.support.v7.app.AppCompatActivity;
 import android.util.DisplayMetrics;
-import android.util.Log;
 import android.view.Gravity;
 import android.view.MotionEvent;
 import android.view.View;
@@ -24,7 +22,8 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.example.thomas.explorador_segunda_tela.helper.PreferencesHelper;
-import com.example.thomas.explorador_segunda_tela.model.Link;
+import com.example.thomas.explorador_segunda_tela.model.Lupa;
+import com.example.thomas.explorador_segunda_tela.model.Tipo;
 import com.example.thomas.explorador_segunda_tela.network.MulticastGroup;
 
 import java.io.BufferedReader;
@@ -36,7 +35,6 @@ import java.util.List;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 
-import static android.view.Gravity.END;
 import static android.view.Gravity.START;
 import static android.view.Gravity.TOP;
 
@@ -64,7 +62,7 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
     private boolean shouldDraw = false;
     private boolean isDrawing = false;
     private CountDownTimer timerDrawing;
-    private List<Link> links;
+    private List<Lupa> lupas;
 
     @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
@@ -146,22 +144,23 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
 //    }
 
     public void createLinks() {
-        links = new ArrayList<>();
+        lupas = new ArrayList<>();
         preferencesHelper.clear();
         for(int i = 0; i < 9; i++) {
             int resIdImage = getResources().getIdentifier("ic_launcher", "mipmap", getPackageName());
-            Link link = new Link("Android custom dialog example!",
+            Lupa lupa = new Lupa("Android custom dialog example!",
                     "Lorem ipsum blandit est netus ultrices lacus vulputate pulvinar, arcu nulla tempus nulla quisque convallis lobortis, et cubilia dui accumsan varius sollicitudin at. tortor arcu tempor at in libero urna aliquam laoreet taciti quisque tempus, praesent ligula ante molestie auctor curabitur vehicula ultricies consectetur vivamus egestas, placerat ut massa dictum potenti semper ac magna odio conubia. libero inceptos netus justo litora fusce lectus ante, per eu placerat orci luctus gravida, quisque conubia quam eu vulputate tincidunt. per mauris nisl tristique id habitant ultricies, fames curae lacinia massa dictum ad, vitae cursus enim vel magna. Turpis aliquam massa ad porta enim fusce, aliquet eros eget commodo nam integer eu, vehicula feugiat tortor elit consectetur. diam nisl feugiat himenaeos erat conubia metus suspendisse fames consequat sodales quisque habitasse, inceptos nisl aptent proin facilisis iaculis eget aliquet nostra habitant sociosqu. aptent ut nostra morbi consectetur conubia donec duis cursus libero, habitasse curae sed tempus lectus porttitor sit facilisis, donec conubia praesent lacinia augue himenaeos pharetra malesuada. habitant himenaeos imperdiet gravida sociosqu felis lacinia eget consectetur congue, dolor nostra consequat ac mi et ante lacinia. ut lectus lobortis nisi hac iaculis interdum donec senectus, phasellus sociosqu himenaeos iaculis a tempor sollicitudin, nibh lobortis ac justo ut in non. ",
+                    resIdImage,
                     resIdImage);
-            links.add(link);
+            lupas.add(lupa);
         }
     }
 
     public void startLink(String color, int id) {
-        if (links != null) {
-            Link link = links.get(id);
-            link.setColor(color);
-            putImageOnView(link);
+        if (lupas != null) {
+            Lupa lupa = lupas.get(id);
+            lupa.setTipo(Tipo.valueOf(color));
+            putImageOnView(lupa);
             preferencesHelper.putPointX(currentCoordinateX);
             preferencesHelper.putPointY(currentCoordinateY);
         }
@@ -271,11 +270,11 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
         image_hat.setMinimumHeight(sizeImage);
         if (image_hat.getVisibility() == View.INVISIBLE)
             image_hat.setVisibility(View.VISIBLE);
-        image_hat.setX(currentCoordinateX - (image_hat.getWidth()/4));
-        image_hat.setY(currentCoordinateY - (image_hat.getHeight()/4));
+        image_hat.setX(currentCoordinateX - (image_hat.getWidth()/2));
+        image_hat.setY(currentCoordinateY - (image_hat.getHeight()/2));
     }
 
-    public void putImageOnView(final Link link) {
+    public void putImageOnView(final Lupa lupa) {
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
@@ -284,7 +283,7 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
                 layoutParams.leftMargin = (int) currentCoordinateX - (layoutParams.width / 2);
                 layoutParams.topMargin = (int) currentCoordinateY - (layoutParams.height / 2);
                 ImageButton imageButton = new ImageButton(MainActivity.this);
-                imageButton.setImageDrawable(getDrawable(link.getResColorLink()));
+                imageButton.setImageDrawable(getDrawable(lupa.getTipo().getResIdLupa()));
                 imageButton.setLayoutParams(layoutParams);
                 imageButton.setBackgroundColor(Color.TRANSPARENT);
                 imageButton.setOnClickListener(new View.OnClickListener() {
@@ -301,11 +300,11 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
                         dialog.getWindow().setLayout(ActionBar.LayoutParams.MATCH_PARENT, height/3);
                         TextView tvTitle = (TextView) dialog.findViewById(R.id.tv_title);
                         tvTitle.setTextSize((widthDevice > 1079) ? 24 : 16);
-                        tvTitle.setText(link.getTitle());
+                        tvTitle.setText(lupa.getTitle());
                         TextView tvText = (TextView) dialog.findViewById(R.id.tv_text);
-                        tvText.setText(link.getDescription());
+                        tvText.setText(lupa.getDescription());
                         ImageView image = (ImageView) dialog.findViewById(R.id.iv_image);
-                        image.setImageResource(link.getResIdImage());
+                        image.setImageResource(lupa.getResIdImage());
                         ImageButton ibClose = (ImageButton) dialog.findViewById(R.id.ib_close);
                         ibClose.setOnClickListener(new View.OnClickListener() {
                             @Override
@@ -316,7 +315,7 @@ public class MainActivity extends AppCompatActivity implements View.OnTouchListe
                         dialog.show();
                     }
                 });
-                showImageInTop(link.getResIdImage());
+                showImageInTop(lupa.getResIdImage());
                 root_view.addView(imageButton);
             }
         });
