@@ -20,9 +20,13 @@ public class MulticastGroup extends MulticastManager {
     private static final String RESUME = "RESUME";
     private static final String PAUSE = "PAUSE";
 
-    public MulticastGroup(MainActivity mainActivity, String tag, String multicastIp, int multicastPort) {
-        super(mainActivity, tag, multicastIp, multicastPort);
-        this.mActivity = mainActivity;
+    private static String tag = "second_screen";
+    private static String multicastIp = "230.192.0.10";
+    private static int multicastPort = 1027;
+
+    public MulticastGroup(MainActivity activityPrincipal) {
+        super(activityPrincipal, tag, multicastIp, multicastPort);
+        this.mActivity = activityPrincipal;
     }
 
     @Override
@@ -46,33 +50,24 @@ public class MulticastGroup extends MulticastManager {
         if (json.has(START)) {
             String action = json.getString(START);
             if (action.equals("drawing")) {
-                mActivity.startDrawing(json.getInt("duration"));
+                mActivity.inicializarDesenho(json.getInt("duration"));
             } else if (action.equals("RED") || action.equals("GREEN") || action.equals("YELLOW") || action.equals("BLUE")) {
-                mActivity.startLink(action, json.getInt("id"));
+                mActivity.exibirLupa(json.getInt("id"), action);
             }
         } else if (json.has(RESUME)) {
             String action = json.getString(RESUME);
-            switch (action) {
-                case "drawing":
-
-                    break;
-                default: break;
+            if (action.equals("drawing")) {
+                mActivity.retomarDesenho();
             }
         } else if (json.has(STOP)) {
             String action = json.getString(STOP);
-            switch (action) {
-                case "drawing":
-                    mActivity.stopDraw();
-                    break;
-                default: break;
+            if (action.equals("drawing")) {
+                mActivity.finalizarDesenho();
             }
         } else if (json.has(PAUSE)) {
             String action = json.getString(PAUSE);
-            switch (action) {
-                case "drawing":
-
-                    break;
-                default: break;
+            if (action.equals("drawing")) {
+                mActivity.pausarDesenho();
             }
         }
     }

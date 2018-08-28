@@ -1,4 +1,4 @@
-package com.example.thomas.explorador_segunda_tela;
+package com.example.thomas.explorador_segunda_tela.view;
 
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -14,6 +14,8 @@ import android.util.AttributeSet;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
+
+import com.example.thomas.explorador_segunda_tela.R;
 
 public class CanvasView extends View {
 

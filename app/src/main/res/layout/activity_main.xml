@@ -1,15 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".MainActivity"
+    tools:context=".activityPrincipal"
     android:orientation="horizontal"
     android:id="@+id/root_view"
     android:background="@mipmap/background">
 
-    <com.example.thomas.explorador_segunda_tela.CanvasView
+    <com.example.thomas.explorador_segunda_tela.view.CanvasView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:id="@+id/canvas_view"
