@@ -3,12 +3,21 @@ package com.example.thomas.explorador_segunda_tela
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.util.DisplayMetrics
+import android.util.Log
+import android.view.MotionEvent
 import android.view.View
 import android.view.WindowManager
 import com.example.thomas.explorador_segunda_tela.network.MulticastGroup
 import kotlinx.android.synthetic.main.activity_main.*
 
 class MainActivity : AppCompatActivity() {
+//    private var listCoordinateX = mutableListOf<Float>()
+//    private var listCoordinateY = mutableListOf<Float>()
+//    override fun onTouch(v: View?, event: MotionEvent?): Boolean {
+//        listCoordinateX.add(event!!.x)
+//        listCoordinateY.add(event!!.y)
+//        return true
+//    }
 
     private val heightDevice by lazy {
         val displayMetrics = DisplayMetrics()
@@ -31,6 +40,7 @@ class MainActivity : AppCompatActivity() {
         window.setFlags(
                 WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN)
         hideSystemUI()
+//        canvas_view.setOnTouchListener(this)
     }
 
     override fun onResume() {
@@ -40,6 +50,13 @@ class MainActivity : AppCompatActivity() {
 
     override fun onStop() {
         multicastGroup.stopMessageReceiver()
+//        Log.e("TAG", "${listCoordinateX.size}")
+//        for (i in 0 until listCoordinateX.size) {
+//            Log.e("X", "${listCoordinateX[i]}")
+//        }
+//        for (i in 0 until listCoordinateY.size) {
+//            Log.e("Y", "${listCoordinateY[i]}")
+//        }
         super.onStop()
     }
 
@@ -56,23 +73,23 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun inicializarDesenho(duration: Int) {
-//        controladorDesenho.inicializarDesenho(duration)
+        controladorDesenho.inicializarDesenho(duration)
     }
 
     fun retomarDesenho() {
-//        controladorDesenho.retomarDesenho()
+        controladorDesenho.retomarDesenho()
     }
 
     fun pausarDesenho() {
-//        controladorDesenho.pausarDesenho()
+        controladorDesenho.pausarDesenho()
     }
 
     fun finalizarDesenho() {
-//        controladorDesenho.finalizarDesenho()
+        controladorDesenho.finalizarDesenho()
     }
 
     fun exibirLupa(id: Int, corLupa: String) {
-//        controladorDesenho.exibirLupa(id, corLupa)
+        controladorDesenho.exibirLupa(id, corLupa)
     }
 
 }

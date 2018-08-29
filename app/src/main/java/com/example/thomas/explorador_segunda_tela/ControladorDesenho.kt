@@ -6,12 +6,9 @@ import android.content.Context
 import android.graphics.Color
 import android.graphics.Typeface
 import android.graphics.drawable.ColorDrawable
-import android.os.Build
 import android.os.CountDownTimer
 import android.os.Handler
-import android.support.annotation.RequiresApi
 import android.support.v4.content.ContextCompat
-import android.text.Layout
 import android.view.Gravity
 import android.view.Gravity.START
 import android.view.Gravity.TOP
@@ -52,8 +49,7 @@ class ControladorDesenho(val context: Context,
     init {
         sizeImage = if (widthDevice > 1079) 120 else 60
         canvas.setOnTouchListener { v, event ->
-            canvas.onTouchEvent(event)
-            return@setOnTouchListener false
+            return@setOnTouchListener true
         }
     }
 
@@ -66,7 +62,7 @@ class ControladorDesenho(val context: Context,
         currentCoordinateY = heightDevice * listCoordinateY[0] / HEIGHT_BASE
         (context as MainActivity).runOnUiThread {
             canvas.shootEventTouch(MotionEvent.ACTION_DOWN, currentCoordinateX - 1, currentCoordinateY - 1)
-            timerDrawing = object : CountDownTimer(((duracaoTotal - tempoAtual) * 1000).toLong(), 500) {
+            timerDrawing = object : CountDownTimer(((duracaoTotal - tempoAtual) * 1000).toLong(), 380) {
                 private var i = 0
                 override fun onFinish() {
                     canvas.shootEventTouch(MotionEvent.ACTION_DOWN, currentCoordinateX + 1, currentCoordinateY + 1)
@@ -132,11 +128,12 @@ class ControladorDesenho(val context: Context,
             with(paramsTitulo) {
                 gravity = START
                 if (mostrarAcima) {
+                    leftMargin = currentCoordinateX.toInt() - 120
+                    topMargin = currentCoordinateY.toInt() - 100
+
+                } else {
                     leftMargin = currentCoordinateX.toInt()
                     topMargin = currentCoordinateY.toInt() + 10
-                } else {
-                    leftMargin = currentCoordinateX.toInt() - 120
-                    topMargin = currentCoordinateY.toInt() - 120
                 }
                 mostrarAcima = !mostrarAcima
             }
@@ -207,8 +204,8 @@ class ControladorDesenho(val context: Context,
     private fun lerCoordenadas() {
         listCoordinateX = mutableListOf()
         listCoordinateY = mutableListOf()
-        val readerX = BufferedReader(InputStreamReader(context.assets.open("coordinates/coord_x"), "UTF-8"))
-        val readerY = BufferedReader(InputStreamReader(context.assets.open("coordinates/coord_y"), "UTF-8"))
+        val readerX = BufferedReader(InputStreamReader(context.assets.open("coordinates/coord_x_2"), "UTF-8"))
+        val readerY = BufferedReader(InputStreamReader(context.assets.open("coordinates/coord_y_2"), "UTF-8"))
         var mLineX = readerX.readLine()
         while (mLineX  != null) {
             listCoordinateX.add(java.lang.Float.parseFloat(mLineX))
