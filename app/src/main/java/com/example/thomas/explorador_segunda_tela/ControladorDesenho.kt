@@ -42,7 +42,8 @@ class ControladorDesenho(val context: Context,
     private val HEIGHT_BASE = 2048
     private val WIDTH_BASE = 1536
     private var tempoAtual = 0
-    private var mostrarAcima = false
+    private var mostrarAcima = true
+    private var mostrarEsquerda = true
 
     private lateinit var timerDrawing: CountDownTimer
 
@@ -128,21 +129,41 @@ class ControladorDesenho(val context: Context,
             with(paramsTitulo) {
                 gravity = START
                 if (mostrarAcima) {
-                    leftMargin = currentCoordinateX.toInt() - 120
-                    topMargin = currentCoordinateY.toInt() - 100
+                    if (mostrarEsquerda) {
+                        leftMargin = currentCoordinateX.toInt() - 280
+                        topMargin = currentCoordinateY.toInt() - 100
+                        mostrarEsquerda = !mostrarEsquerda
+                    } else {
+                        leftMargin = currentCoordinateX.toInt() + 50
+                        topMargin = currentCoordinateY.toInt() - 100
+                        mostrarEsquerda = !mostrarEsquerda
+                        mostrarAcima = !mostrarAcima
+                    }
 
-                } else {
-                    leftMargin = currentCoordinateX.toInt()
-                    topMargin = currentCoordinateY.toInt() + 10
+//                    leftMargin = currentCoordinateX.toInt() - 120
+//                    topMargin = currentCoordinateY.toInt() - 100
+                } else if(!mostrarAcima) {
+                    if (mostrarEsquerda) {
+                        leftMargin = currentCoordinateX.toInt() - 280
+                        topMargin = currentCoordinateY.toInt() + 10
+                        mostrarEsquerda = !mostrarEsquerda
+                    } else {
+                        leftMargin = currentCoordinateX.toInt() - 40
+                        topMargin = currentCoordinateY.toInt() - 100
+                        mostrarEsquerda = !mostrarEsquerda
+                        mostrarAcima = !mostrarAcima
+                    }
+//                    leftMargin = currentCoordinateX.toInt()
+//                    topMargin = currentCoordinateY.toInt() + 10
                 }
-                mostrarAcima = !mostrarAcima
             }
             val tituloLupa = TextView(context)
             with(tituloLupa) {
                 text = lupa.title
                 textSize = 22F
                 layoutParams = paramsTitulo
-                typeface = Typeface.DEFAULT_BOLD
+                typeface = Typeface.createFromAsset(context.assets, "font/papyrus_let_bold.ttf")
+//                typeface = Typeface.DEFAULT_BOLD
                 setTextColor(ContextCompat.getColor(context, R.color.orange))
             }
             rootView.addView(tituloLupa)

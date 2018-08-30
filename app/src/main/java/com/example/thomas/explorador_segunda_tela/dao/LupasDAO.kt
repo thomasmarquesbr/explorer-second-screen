@@ -37,7 +37,7 @@ class LupasDAO(val context: Context) {
                 resIdImage)
         lupas.add(lupa)
         lupa = Lupa("Alternos internos",
-                "Num sistema de duas retas paralelas cortadas por uma terceira, os ângulos alternos-internos (64º e 116º) são sempre geometricamente iguais entre si.",
+                "Num sistema de duas retas paralelas cortadas por uma terceira, os ângulos alternos-internos (64° e 116°) são sempre geometricamente iguais entre si.",
                 resIdImage,
                 resIdImage)
         lupas.add(lupa)
@@ -46,8 +46,8 @@ class LupasDAO(val context: Context) {
                 resIdImage,
                 resIdImage)
         lupas.add(lupa)
-        lupa = Lupa("360º",
-                "Em 4 mil a.C. acreditava-se que o Sol girava em torno da Terra descrevendo uma órbita circular perfeita em 360 dias. Cada dia (1/360) era equivalente a um arco de 1 grau (1º).",
+        lupa = Lupa("        360°",
+                "Em 4 mil a.C. acreditava-se que o Sol girava em torno da Terra descrevendo uma órbita circular perfeita em 360 dias. Cada dia (1/360) era equivalente a um arco de 1 grau (1°).",
                 resIdImage,
                 resIdImage)
         lupas.add(lupa)

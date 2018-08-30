@@ -7,6 +7,7 @@ import android.util.Log
 import android.view.MotionEvent
 import android.view.View
 import android.view.WindowManager
+import com.example.thomas.explorador_segunda_tela.helper.PreferencesHelper
 import com.example.thomas.explorador_segunda_tela.network.MulticastGroup
 import kotlinx.android.synthetic.main.activity_main.*
 
@@ -32,6 +33,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private val multicastGroup by lazy { MulticastGroup(this) }
+//    private val preferencesHelper by lazy { PreferencesHelper(this) }
     private val controladorDesenho by lazy { ControladorDesenho(this, canvas_view, root_view, widthDevice, heightDevice) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
