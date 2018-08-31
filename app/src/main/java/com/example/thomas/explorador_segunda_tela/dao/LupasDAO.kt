@@ -46,7 +46,7 @@ class LupasDAO(val context: Context) {
                 resIdImage,
                 resIdImage)
         lupas.add(lupa)
-        lupa = Lupa("        360°",
+        lupa = Lupa("       360 graus",
                 "Em 4 mil a.C. acreditava-se que o Sol girava em torno da Terra descrevendo uma órbita circular perfeita em 360 dias. Cada dia (1/360) era equivalente a um arco de 1 grau (1°).",
                 resIdImage,
                 resIdImage)

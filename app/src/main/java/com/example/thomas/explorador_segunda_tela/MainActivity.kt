@@ -42,12 +42,17 @@ class MainActivity : AppCompatActivity() {
         window.setFlags(
                 WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN)
         hideSystemUI()
+
+        reload.setOnClickListener {
+            controladorDesenho.inicializarDesenhoOffline()
+        }
 //        canvas_view.setOnTouchListener(this)
     }
 
     override fun onResume() {
         super.onResume()
         multicastGroup.startMessageReceiver()
+        controladorDesenho.carregarDesenho()
     }
 
     override fun onStop() {
@@ -91,7 +96,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     fun exibirLupa(id: Int, corLupa: String) {
-        controladorDesenho.exibirLupa(id, corLupa)
+        controladorDesenho.exibirLupa(id, corLupa, false)
     }
 
 }

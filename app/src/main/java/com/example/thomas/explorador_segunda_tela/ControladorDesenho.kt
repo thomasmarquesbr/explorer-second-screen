@@ -6,25 +6,26 @@ import android.content.Context
 import android.graphics.Color
 import android.graphics.Typeface
 import android.graphics.drawable.ColorDrawable
+import android.net.Uri
 import android.os.CountDownTimer
 import android.os.Handler
 import android.support.v4.content.ContextCompat
+import android.util.Log
 import android.view.Gravity
 import android.view.Gravity.START
 import android.view.Gravity.TOP
 import android.view.MotionEvent
 import android.view.View
 import android.view.Window
-import android.widget.FrameLayout
-import android.widget.ImageButton
-import android.widget.ImageView
-import android.widget.TextView
+import android.widget.*
 import com.example.thomas.explorador_segunda_tela.dao.LupasDAO
+import com.example.thomas.explorador_segunda_tela.helper.PreferencesHelper
 import com.example.thomas.explorador_segunda_tela.model.Lupa
 import com.example.thomas.explorador_segunda_tela.model.Tipo
 import com.example.thomas.explorador_segunda_tela.view.CanvasView
 import java.io.BufferedReader
 import java.io.InputStreamReader
+import java.util.ArrayList
 
 class ControladorDesenho(val context: Context,
                          val canvas: CanvasView,
@@ -32,7 +33,9 @@ class ControladorDesenho(val context: Context,
                          val widthDevice: Int,
                          val heightDevice: Int) {
 
+    private val mPref = PreferencesHelper(context)
     private var sizeImage: Int = 0
+    private var countTimer = 0
     private val lupasDAO = LupasDAO(context)
     private var listCoordinateX = mutableListOf<Float>()
     private var listCoordinateY = mutableListOf<Float>()
@@ -54,26 +57,171 @@ class ControladorDesenho(val context: Context,
         }
     }
 
-    fun inicializarDesenho(duracaoTotal: Int) {
+    fun carregarDesenho() {
+        val duration = mPref.getDuration()
+        val listTimes = mPref.getListTimes()
+        if (duration == 0 || listTimes == null || listTimes?.size < 9)
+            return
+
         lerCoordenadas()
-        isDrawing = true
-        tempoAtual = 0
-        val size = if (listCoordinateX.size <= listCoordinateY.size) listCoordinateX.size else listCoordinateY.size
+        val cores = criarListaCoresDasLupas(listTimes)
+
+        val totalPontos = (duration * 1000) / 380
+        canvas.shootEventTouch(
+                MotionEvent.ACTION_DOWN, listCoordinateX[0] - 1, listCoordinateY[0] - 1)
+        for (i in 0..totalPontos) {
+            canvas.shootEventTouch(
+                    MotionEvent.ACTION_MOVE, listCoordinateX[i], listCoordinateY[i])
+        }
+        canvas.shootEventTouch(
+                MotionEvent.ACTION_DOWN, listCoordinateX[listCoordinateX.size-1] + 1, listCoordinateY[listCoordinateY.size-1] - 1)
+
+        mostrarAcima = true
+        mostrarEsquerda = true
+        listTimes.forEachIndexed { i, it ->
+            val currentTime = it.toInt()*1000/380
+            currentCoordinateX = listCoordinateX[currentTime]
+            currentCoordinateY = listCoordinateY[currentTime]
+            exibirLupa(i, cores[i].cor, true, true)
+        }
+        currentCoordinateX = listCoordinateX.last()
+        currentCoordinateY = listCoordinateY.last()
+        finalizarDesenho()
+
+    }
+
+    fun inicializarDesenhoOffline() {
+        val duration = mPref.getDuration()
+        val listTimes = mPref.getListTimes()
+        val cores = criarListaCoresDasLupas(listTimes)
+
+        mostrarAcima = true
+        mostrarEsquerda = true
+        var currentTime = 0
+        val timer = object : CountDownTimer((duration * 1000).toLong(), 1000) {
+            var i = 0
+            override fun onFinish() {
+                finalizarDesenho()
+            }
+            override fun onTick(millisUntilFinished: Long) {
+                listTimes?.forEach {
+                    if (it.toInt() == currentTime) {
+                        exibirLupa(i, cores[i].cor, true)
+                        i++
+                    }
+                }
+                currentTime++
+            }
+        }.start()
+
         currentCoordinateX = widthDevice * listCoordinateX[0] / WIDTH_BASE
         currentCoordinateY = heightDevice * listCoordinateY[0] / HEIGHT_BASE
-        (context as MainActivity).runOnUiThread {
+        isDrawing = true
+        (context as MainActivity).run {
+            rootView.findViewById<ImageView>(R.id.x_image)
+                    .visibility = View.INVISIBLE
+            rootView.findViewById<ImageButton>(R.id.reload)
+                    .visibility = View.INVISIBLE
+            removeTodasAsLupas()
+            val videoView = rootView.findViewById<VideoView>(R.id.video_view)
+            with(videoView) {
+                val videoPath = "android.resource://" + packageName + "/" + R.raw.video
+                visibility = View.VISIBLE
+                setVideoURI(Uri.parse(videoPath))
+//                setMediaController(MediaController(context))
+                setOnCompletionListener { videoView.visibility = View.INVISIBLE }
+                start()
+            }
+            canvas.clearCanvas()
             canvas.shootEventTouch(MotionEvent.ACTION_DOWN, currentCoordinateX - 1, currentCoordinateY - 1)
-            timerDrawing = object : CountDownTimer(((duracaoTotal - tempoAtual) * 1000).toLong(), 380) {
+            timerDrawing = object : CountDownTimer((duration * 1000).toLong(), 380) {
                 private var i = 0
                 override fun onFinish() {
                     canvas.shootEventTouch(MotionEvent.ACTION_DOWN, currentCoordinateX + 1, currentCoordinateY + 1)
                 }
                 override fun onTick(millisUntilFinished: Long) {
-                currentCoordinateX = widthDevice * listCoordinateX[i] / WIDTH_BASE
-                currentCoordinateY = heightDevice * listCoordinateY[i] / HEIGHT_BASE
+                    currentCoordinateX = widthDevice * listCoordinateX[i] / WIDTH_BASE
+                    currentCoordinateY = heightDevice * listCoordinateY[i] / HEIGHT_BASE
                     moveChapeu()
                     canvas.shootEventTouch(MotionEvent.ACTION_MOVE, currentCoordinateX, currentCoordinateY)
                     i++
+                }
+            }.start()
+        }
+    }
+
+    private fun criarListaCoresDasLupas(listTimes: ArrayList<String>?): MutableList<Tipo> {
+        val colors = mutableListOf<Tipo>()
+        var index = 0
+        listTimes?.let {
+            it.forEach {
+                if (index == 4)
+                    index = 0
+                colors.add(Tipo.values()[index])
+                index++
+            }
+        }
+        return colors
+    }
+
+    private fun removeTodasAsLupas() {
+        (context as MainActivity).runOnUiThread {
+            val canvasView = rootView.findViewById<CanvasView>(R.id.canvas_view)
+            val imageView = rootView.findViewById<ImageView>(R.id.image_view)
+            val videoView = rootView.findViewById<VideoView>(R.id.video_view)
+            videoView.visibility = View.INVISIBLE
+            val xImage = rootView.findViewById<ImageView>(R.id.x_image)
+            xImage.visibility = View.INVISIBLE
+            val ibReload = rootView.findViewById<ImageButton>(R.id.reload)
+            ibReload.visibility = View.INVISIBLE
+            val imageHat = rootView.findViewById<ImageView>(R.id.image_hat)
+            rootView.removeAllViews()
+            rootView.addView(canvasView)
+            rootView.addView(imageView)
+            rootView.addView(videoView)
+            rootView.addView(xImage)
+            rootView.addView(ibReload)
+            rootView.addView(imageHat)
+        }
+    }
+
+    fun inicializarDesenho(duracaoTotal: Int) {
+        removeTodasAsLupas()
+        lerCoordenadas()
+        mPref.clear()
+        mPref.putDuration(duracaoTotal)
+        isDrawing = true
+        tempoAtual = 0
+        val size = if (listCoordinateX.size <= listCoordinateY.size) listCoordinateX.size else listCoordinateY.size
+        currentCoordinateX = widthDevice * listCoordinateX[0] / WIDTH_BASE
+        currentCoordinateY = heightDevice * listCoordinateY[0] / HEIGHT_BASE
+        iniciarTemporizador(duracaoTotal)
+        (context as MainActivity).runOnUiThread {
+            canvas.clearCanvas()
+            canvas.shootEventTouch(MotionEvent.ACTION_DOWN, currentCoordinateX - 1, currentCoordinateY - 1)
+            timerDrawing = object : CountDownTimer(((duracaoTotal - tempoAtual) * 1000).toLong(), 380) {
+                private var i = 0
+                override fun onFinish() {
+                    canvas.shootEventTouch(MotionEvent.ACTION_DOWN, currentCoordinateX + 1, currentCoordinateY + 1)
+                    isDrawing = false
+                }
+                override fun onTick(millisUntilFinished: Long) {
+                    currentCoordinateX = widthDevice * listCoordinateX[i] / WIDTH_BASE
+                    currentCoordinateY = heightDevice * listCoordinateY[i] / HEIGHT_BASE
+                    moveChapeu()
+                    canvas.shootEventTouch(MotionEvent.ACTION_MOVE, currentCoordinateX, currentCoordinateY)
+                    i++
+                }
+            }.start()
+        }
+    }
+
+    private fun iniciarTemporizador(duracaoTotal: Int) {
+        (context as MainActivity).runOnUiThread {
+            val timer = object : CountDownTimer((duracaoTotal * 1000).toLong(), 1000) {
+                override fun onFinish() {}
+                override fun onTick(millisUntilFinished: Long) {
+                    countTimer++
                 }
             }.start()
         }
@@ -89,7 +237,8 @@ class ControladorDesenho(val context: Context,
 
     fun finalizarDesenho() {
         (context as MainActivity).runOnUiThread {
-            timerDrawing.cancel()
+            if (isDrawing)
+                timerDrawing.cancel()
             val xImage = rootView.findViewById<ImageView>(R.id.x_image)
             with(xImage) {
                 visibility = View.VISIBLE
@@ -97,12 +246,18 @@ class ControladorDesenho(val context: Context,
                 x = (currentCoordinateX.toInt() - sizeImage / 2).toFloat()
                 y = (currentCoordinateY.toInt() - sizeImage / 2).toFloat()
             }
+            val reloadImage = rootView.findViewById<ImageButton>(R.id.reload)
+            with(reloadImage) {
+                visibility = View.VISIBLE
+                x = (currentCoordinateX.toInt() + sizeImage/2).toFloat()
+                y = (currentCoordinateY.toInt() - sizeImage/2).toFloat()
+            }
             val chapeu = rootView.findViewById<ImageView>(R.id.image_hat)
             chapeu.visibility = View.INVISIBLE
         }
     }
 
-    fun exibirLupa(id: Int, corLupa: String) {
+    fun exibirLupa(id: Int, corLupa: String, isOffline: Boolean, firstLoading: Boolean = false) {
         val lupa = lupasDAO.lupas[id]
         lupa.tipo = Tipo.valueOf(corLupa)
         (context as MainActivity).runOnUiThread {
@@ -114,6 +269,7 @@ class ControladorDesenho(val context: Context,
             }
             val imageButton = ImageButton(context)
             with(imageButton) {
+                tag = "lupa"
                 setImageDrawable(context.getDrawable(lupa.tipo.resIdLupa))
                 layoutParams = paramsLupa
                 setBackgroundColor(Color.TRANSPARENT)
@@ -121,44 +277,21 @@ class ControladorDesenho(val context: Context,
                     exibirDialog(lupa)
                 }
             }
-            mostrarImagem(lupa.resIdImage)
+            if (!firstLoading)
+                mostrarImagem(lupa.resIdImage)
             rootView.addView(imageButton)
 
             val paramsTitulo = FrameLayout.LayoutParams(
                     FrameLayout.LayoutParams.WRAP_CONTENT, FrameLayout.LayoutParams.WRAP_CONTENT)
             with(paramsTitulo) {
                 gravity = START
-                if (mostrarAcima) {
-                    if (mostrarEsquerda) {
-                        leftMargin = currentCoordinateX.toInt() - 280
-                        topMargin = currentCoordinateY.toInt() - 100
-                        mostrarEsquerda = !mostrarEsquerda
-                    } else {
-                        leftMargin = currentCoordinateX.toInt() + 50
-                        topMargin = currentCoordinateY.toInt() - 100
-                        mostrarEsquerda = !mostrarEsquerda
-                        mostrarAcima = !mostrarAcima
-                    }
-
-//                    leftMargin = currentCoordinateX.toInt() - 120
-//                    topMargin = currentCoordinateY.toInt() - 100
-                } else if(!mostrarAcima) {
-                    if (mostrarEsquerda) {
-                        leftMargin = currentCoordinateX.toInt() - 280
-                        topMargin = currentCoordinateY.toInt() + 10
-                        mostrarEsquerda = !mostrarEsquerda
-                    } else {
-                        leftMargin = currentCoordinateX.toInt() - 40
-                        topMargin = currentCoordinateY.toInt() - 100
-                        mostrarEsquerda = !mostrarEsquerda
-                        mostrarAcima = !mostrarAcima
-                    }
-//                    leftMargin = currentCoordinateX.toInt()
-//                    topMargin = currentCoordinateY.toInt() + 10
-                }
+                configuraLayoutTitulo()
+                mPref.putPointX(leftMargin.toFloat())
+                mPref.putPointY(topMargin.toFloat())
             }
             val tituloLupa = TextView(context)
             with(tituloLupa) {
+                tag = "tituloLupa"
                 text = lupa.title
                 textSize = 22F
                 layoutParams = paramsTitulo
@@ -167,6 +300,35 @@ class ControladorDesenho(val context: Context,
                 setTextColor(ContextCompat.getColor(context, R.color.orange))
             }
             rootView.addView(tituloLupa)
+
+            if (!isOffline)
+                mPref.putTime(countTimer)
+        }
+    }
+
+    private fun FrameLayout.LayoutParams.configuraLayoutTitulo() {
+        if (mostrarAcima) {
+            if (mostrarEsquerda) { // superior esquerdo
+                leftMargin = currentCoordinateX.toInt() - 280
+                topMargin = currentCoordinateY.toInt() - 100
+                mostrarEsquerda = !mostrarEsquerda
+            } else { //superior direito
+                leftMargin = currentCoordinateX.toInt() + 20
+                topMargin = currentCoordinateY.toInt() - 100
+                mostrarEsquerda = !mostrarEsquerda
+                mostrarAcima = !mostrarAcima
+            }
+        } else if (!mostrarAcima) {
+            if (mostrarEsquerda) { // inferior esquerdo
+                leftMargin = currentCoordinateX.toInt() - 280
+                topMargin = currentCoordinateY.toInt() + 10
+                mostrarEsquerda = !mostrarEsquerda
+            } else { // inferior direito
+                leftMargin = currentCoordinateX.toInt() - 40
+                topMargin = currentCoordinateY.toInt() - 100
+                mostrarEsquerda = !mostrarEsquerda
+                mostrarAcima = !mostrarAcima
+            }
         }
     }
 
