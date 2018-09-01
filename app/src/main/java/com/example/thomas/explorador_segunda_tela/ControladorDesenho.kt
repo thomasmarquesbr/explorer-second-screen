@@ -82,7 +82,7 @@ class ControladorDesenho(val context: Context,
             val currentTime = it.toInt()*1000/380
             currentCoordinateX = listCoordinateX[currentTime]
             currentCoordinateY = listCoordinateY[currentTime]
-            exibirLupa(i, cores[i].cor, true, true)
+            exibirLupa(i, cores[i].cor, true)
         }
         currentCoordinateX = listCoordinateX.last()
         currentCoordinateY = listCoordinateY.last()
@@ -125,7 +125,7 @@ class ControladorDesenho(val context: Context,
             removeTodasAsLupas()
             val videoView = rootView.findViewById<VideoView>(R.id.video_view)
             with(videoView) {
-                val videoPath = "android.resource://" + packageName + "/" + R.raw.video
+                val videoPath = "android.resource://" + packageName + "/" + R.raw.animacao
                 visibility = View.VISIBLE
                 setVideoURI(Uri.parse(videoPath))
 //                setMediaController(MediaController(context))
@@ -175,6 +175,7 @@ class ControladorDesenho(val context: Context,
             val ibReload = rootView.findViewById<ImageButton>(R.id.reload)
             ibReload.visibility = View.INVISIBLE
             val imageHat = rootView.findViewById<ImageView>(R.id.image_hat)
+            val clearButton = rootView.findViewById<Button>(R.id.clear_button)
             rootView.removeAllViews()
             rootView.addView(canvasView)
             rootView.addView(imageView)
@@ -182,6 +183,7 @@ class ControladorDesenho(val context: Context,
             rootView.addView(xImage)
             rootView.addView(ibReload)
             rootView.addView(imageHat)
+            rootView.addView(clearButton)
         }
     }
 
@@ -257,7 +259,7 @@ class ControladorDesenho(val context: Context,
         }
     }
 
-    fun exibirLupa(id: Int, corLupa: String, isOffline: Boolean, firstLoading: Boolean = false) {
+    fun exibirLupa(id: Int, corLupa: String, isOffline: Boolean) {
         val lupa = lupasDAO.lupas[id]
         lupa.tipo = Tipo.valueOf(corLupa)
         (context as MainActivity).runOnUiThread {
@@ -277,7 +279,7 @@ class ControladorDesenho(val context: Context,
                     exibirDialog(lupa)
                 }
             }
-            if (!firstLoading)
+            if (!isOffline)
                 mostrarImagem(lupa.resIdImage)
             rootView.addView(imageButton)
 
@@ -401,6 +403,14 @@ class ControladorDesenho(val context: Context,
         }
         readerX.close()
         readerY.close()
+    }
+
+    fun limparDesenho() {
+        mostrarAcima = true
+        mostrarEsquerda = true
+        mPref.clear()
+        canvas.clearCanvas()
+        removeTodasAsLupas()
     }
 
 }

@@ -46,6 +46,9 @@ class MainActivity : AppCompatActivity() {
         reload.setOnClickListener {
             controladorDesenho.inicializarDesenhoOffline()
         }
+        clear_button.setOnClickListener {
+            controladorDesenho.limparDesenho()
+        }
 //        canvas_view.setOnTouchListener(this)
     }
 

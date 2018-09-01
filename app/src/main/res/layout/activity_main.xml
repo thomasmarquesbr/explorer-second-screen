@@ -19,16 +19,16 @@
         android:layout_height="wrap_content"
         android:id="@+id/image_view"
         android:layout_marginEnd="16dp"
-        android:layout_marginTop="200dp"
+        android:layout_marginTop="16dp"
         android:layout_gravity="end|top"
         android:visibility="invisible"
         />
 
     <VideoView
-        android:layout_width="400dp"
+        android:layout_width="427dp"
         android:layout_height="240dp"
         android:layout_marginEnd="16dp"
-        android:layout_marginTop="200dp"
+        android:layout_marginTop="160dp"
         android:layout_gravity="end|top"
         android:id="@+id/video_view"
         android:visibility="invisible"
@@ -57,6 +57,17 @@
         android:id="@+id/image_hat"
         android:src="@mipmap/hat"
         android:visibility="invisible"
+        />
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="4dp"
+        android:layout_marginBottom="4dp"
+        android:layout_gravity="bottom"
+        android:id="@+id/clear_button"
+        android:text="Limpar"
+        android:background="@android:color/transparent"
         />
 
 </FrameLayout>
