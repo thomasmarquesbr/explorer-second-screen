@@ -10,7 +10,6 @@ import android.net.Uri
 import android.os.CountDownTimer
 import android.os.Handler
 import android.support.v4.content.ContextCompat
-import android.util.Log
 import android.view.Gravity
 import android.view.Gravity.START
 import android.view.Gravity.TOP
@@ -47,7 +46,9 @@ class ControladorDesenho(val context: Context,
     private var tempoAtual = 0
     private var mostrarAcima = true
     private var mostrarEsquerda = true
+    private var currentCoordinateIndex = 0
 
+    private lateinit var timer: CountDownTimer
     private lateinit var timerDrawing: CountDownTimer
 
     init {
@@ -198,21 +199,21 @@ class ControladorDesenho(val context: Context,
         currentCoordinateX = widthDevice * listCoordinateX[0] / WIDTH_BASE
         currentCoordinateY = heightDevice * listCoordinateY[0] / HEIGHT_BASE
         iniciarTemporizador(duracaoTotal)
+        currentCoordinateIndex = 0
         (context as MainActivity).runOnUiThread {
             canvas.clearCanvas()
             canvas.shootEventTouch(MotionEvent.ACTION_DOWN, currentCoordinateX - 1, currentCoordinateY - 1)
             timerDrawing = object : CountDownTimer(((duracaoTotal - tempoAtual) * 1000).toLong(), 380) {
-                private var i = 0
                 override fun onFinish() {
                     canvas.shootEventTouch(MotionEvent.ACTION_DOWN, currentCoordinateX + 1, currentCoordinateY + 1)
                     isDrawing = false
                 }
                 override fun onTick(millisUntilFinished: Long) {
-                    currentCoordinateX = widthDevice * listCoordinateX[i] / WIDTH_BASE
-                    currentCoordinateY = heightDevice * listCoordinateY[i] / HEIGHT_BASE
+                    currentCoordinateX = widthDevice * listCoordinateX[currentCoordinateIndex] / WIDTH_BASE
+                    currentCoordinateY = heightDevice * listCoordinateY[currentCoordinateIndex] / HEIGHT_BASE
                     moveChapeu()
                     canvas.shootEventTouch(MotionEvent.ACTION_MOVE, currentCoordinateX, currentCoordinateY)
-                    i++
+                    currentCoordinateIndex++
                 }
             }.start()
         }
@@ -220,7 +221,7 @@ class ControladorDesenho(val context: Context,
 
     private fun iniciarTemporizador(duracaoTotal: Int) {
         (context as MainActivity).runOnUiThread {
-            val timer = object : CountDownTimer((duracaoTotal * 1000).toLong(), 1000) {
+            timer = object : CountDownTimer(((duracaoTotal-tempoAtual) * 1000).toLong(), 1000) {
                 override fun onFinish() {}
                 override fun onTick(millisUntilFinished: Long) {
                     countTimer++
@@ -229,12 +230,38 @@ class ControladorDesenho(val context: Context,
         }
     }
 
-    fun pausarDesenho() {
-
+    fun pausarDesenho(currentDuration: Int) {
+        tempoAtual = currentDuration
+        (context as MainActivity).runOnUiThread {
+            if (timerDrawing != null)
+                timerDrawing.cancel()
+            if (timer != null)
+                timer.cancel()
+        }
     }
 
-    fun retomarDesenho() {
+    fun retomarDesenho(currentDuration: Int) {
+        tempoAtual = currentDuration
+        if (mPref.getDuration() == 0)
+            return
 
+        isDrawing = true
+        iniciarTemporizador(mPref.getDuration())
+        (context as MainActivity).runOnUiThread {
+            timerDrawing = object : CountDownTimer(((mPref.getDuration() - tempoAtual) * 1000).toLong(), 380) {
+                override fun onFinish() {
+                    canvas.shootEventTouch(MotionEvent.ACTION_DOWN, currentCoordinateX + 1, currentCoordinateY + 1)
+                    isDrawing = false
+                }
+                override fun onTick(millisUntilFinished: Long) {
+                    currentCoordinateX = widthDevice * listCoordinateX[currentCoordinateIndex] / WIDTH_BASE
+                    currentCoordinateY = heightDevice * listCoordinateY[currentCoordinateIndex] / HEIGHT_BASE
+                    moveChapeu()
+                    canvas.shootEventTouch(MotionEvent.ACTION_MOVE, currentCoordinateX, currentCoordinateY)
+                    currentCoordinateIndex++
+                }
+            }.start()
+        }
     }
 
     fun finalizarDesenho() {

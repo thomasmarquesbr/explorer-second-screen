@@ -3,11 +3,8 @@ package com.example.thomas.explorador_segunda_tela
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.util.DisplayMetrics
-import android.util.Log
-import android.view.MotionEvent
 import android.view.View
 import android.view.WindowManager
-import com.example.thomas.explorador_segunda_tela.helper.PreferencesHelper
 import com.example.thomas.explorador_segunda_tela.network.MulticastGroup
 import kotlinx.android.synthetic.main.activity_main.*
 
@@ -86,12 +83,12 @@ class MainActivity : AppCompatActivity() {
         controladorDesenho.inicializarDesenho(duration)
     }
 
-    fun retomarDesenho() {
-        controladorDesenho.retomarDesenho()
+    fun retomarDesenho(currentDuration: Int) {
+        controladorDesenho.retomarDesenho(currentDuration)
     }
 
-    fun pausarDesenho() {
-        controladorDesenho.pausarDesenho()
+    fun pausarDesenho(currentDuration: Int) {
+        controladorDesenho.pausarDesenho(currentDuration)
     }
 
     fun finalizarDesenho() {
