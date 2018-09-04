@@ -124,13 +124,18 @@ class ControladorDesenho(val context: Context,
             rootView.findViewById<ImageButton>(R.id.reload)
                     .visibility = View.INVISIBLE
             removeTodasAsLupas()
+            val rl_video = rootView.findViewById<RelativeLayout>(R.id.rl_video)
+            rl_video.visibility = View.VISIBLE
             val videoView = rootView.findViewById<VideoView>(R.id.video_view)
             with(videoView) {
-                val videoPath = "android.resource://" + packageName + "/" + R.raw.animacao
+                val videoPath = "android.resource://" + packageName + "/" + R.raw.video
                 visibility = View.VISIBLE
                 setVideoURI(Uri.parse(videoPath))
 //                setMediaController(MediaController(context))
-                setOnCompletionListener { videoView.visibility = View.INVISIBLE }
+                setOnCompletionListener {
+                    videoView.visibility = View.INVISIBLE
+                    rl_video.visibility = View.INVISIBLE
+                }
                 start()
             }
             canvas.clearCanvas()
@@ -169,8 +174,8 @@ class ControladorDesenho(val context: Context,
         (context as MainActivity).runOnUiThread {
             val canvasView = rootView.findViewById<CanvasView>(R.id.canvas_view)
             val imageView = rootView.findViewById<ImageView>(R.id.image_view)
-            val videoView = rootView.findViewById<VideoView>(R.id.video_view)
-            videoView.visibility = View.INVISIBLE
+            val rlVideoView = rootView.findViewById<RelativeLayout>(R.id.rl_video)
+            rlVideoView.visibility = View.INVISIBLE
             val xImage = rootView.findViewById<ImageView>(R.id.x_image)
             xImage.visibility = View.INVISIBLE
             val ibReload = rootView.findViewById<ImageButton>(R.id.reload)
@@ -180,7 +185,7 @@ class ControladorDesenho(val context: Context,
             rootView.removeAllViews()
             rootView.addView(canvasView)
             rootView.addView(imageView)
-            rootView.addView(videoView)
+            rootView.addView(rlVideoView)
             rootView.addView(xImage)
             rootView.addView(ibReload)
             rootView.addView(imageHat)
